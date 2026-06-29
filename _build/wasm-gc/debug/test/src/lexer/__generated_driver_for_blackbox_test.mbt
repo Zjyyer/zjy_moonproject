@@ -389,6 +389,51 @@ fn moonbit_test_driver_internal_catch_error(
 // =========================================================
 // -=================== END JS SPECIFIC ====================
 // =========================================================
+// This file is introduced when tests without args is needed
+
+///|
+let moonbit_test_driver_internal_no_args_tests : MoonBitTestDriverInternalTestMap[
+  () -> Unit raise,
+] = {
+  "token.mbt": {
+  },
+  "lexer_test.mbt": {
+    0: (__test_6c657865725f746573742e6d6274_0, ["Lexer basic tokens"]),
+  },
+  "lexer.mbt": {
+  },
+}
+
+
+///|
+impl MoonBit_Test_Driver for MoonBit_Test_Driver_Internal_No_Args with fn run_test(
+  _,
+  filename,
+  index,
+  handle_result,
+  error_to_string,
+) {
+  if moonbit_test_driver_internal_no_args_tests.0.get(filename)
+    is Some(index_map) &&
+    index_map.get(index) is Some((f, attrs)) {
+    let name = if attrs is [name, ..] { name } else { "" }
+    if MOONBIT_TEST_DRIVER_INTERNAL_IS_NATIVE {
+      for attr in attrs {
+        if attr is [.. "panic", ..] {
+          raise MoonBitTestDriverInternalSkipTest(name~)
+        }
+      }
+    }
+    moonbit_test_driver_internal_catch_error(
+      f,
+      on_ok=() => handle_result(name, "", false),
+      on_err=err => handle_result(name, error_to_string(err), false),
+    )
+    true
+  } else {
+    false
+  }
+}
 ///|
 #cfg(target="native")
 #test_entry

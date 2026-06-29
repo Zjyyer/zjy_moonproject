@@ -1,27 +1,27 @@
 /// `Value` represents the dynamic data types supported in the template.
-public enum Value {
-  Null
-  Bool(Bool)
-  Number(Double)
-  String(String)
-  Array(Array[Value])
-  Object(Map[String, Value])
-} derive(Eq, Show)
+pub(all) enum Value {
+  VNull
+  VBool(Bool)
+  VNumber(Double)
+  VString(String)
+  VArray(Array[Value])
+  VObject(Map[String, Value])
+} derive(Eq, Debug)
 
 /// Check if a `Value` is considered truthy.
 ///
 /// In MoonTera:
-/// - `Null` is false
-/// - `Bool(false)` is false
-/// - `Number(0.0)` is false, all other numbers are true
-/// - Empty `String`, `Array`, `Object` are false
-public fn is_truthy(self : Value) -> Bool {
+/// - `VNull` is false
+/// - `VBool(false)` is false
+/// - `VNumber(0.0)` is false, all other numbers are true
+/// - Empty `VString`, `VArray`, `VObject` are false
+pub fn Value::is_truthy(self : Value) -> Bool {
   match self {
-    Null => false
-    Bool(b) => b
-    Number(n) => n != 0.0
-    String(s) => s.length() > 0
-    Array(arr) => arr.length() > 0
-    Object(obj) => obj.size() > 0
+    VNull => false
+    VBool(b) => b
+    VNumber(n) => n != 0.0
+    VString(s) => s.length() > 0
+    VArray(arr) => arr.length() > 0
+    VObject(obj) => obj.size() > 0
   }
 }

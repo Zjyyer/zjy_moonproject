@@ -382,6 +382,11 @@
     },
     {
       "root": "moontera",
+      "rel": "src/parser",
+      "artifact": "C:\\Users\\px830\\Desktop\\周继远\\moontera\\_build\\wasm-gc\\debug\\test\\src\\parser\\parser.mi"
+    },
+    {
+      "root": "moontera",
       "rel": "src/value",
       "artifact": "C:\\Users\\px830\\Desktop\\周继远\\moontera\\_build\\wasm-gc\\debug\\test\\src\\value\\value.mi"
     }

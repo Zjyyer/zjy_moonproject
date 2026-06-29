@@ -377,6 +377,16 @@
     },
     {
       "root": "moontera",
+      "rel": "src/context",
+      "artifact": "C:\\Users\\px830\\Desktop\\周继远\\moontera\\_build\\wasm-gc\\debug\\test\\src\\context\\context.mi"
+    },
+    {
+      "root": "moontera",
+      "rel": "src/evaluator",
+      "artifact": "C:\\Users\\px830\\Desktop\\周继远\\moontera\\_build\\wasm-gc\\debug\\test\\src\\evaluator\\evaluator.mi"
+    },
+    {
+      "root": "moontera",
       "rel": "src/lexer",
       "artifact": "C:\\Users\\px830\\Desktop\\周继远\\moontera\\_build\\wasm-gc\\debug\\test\\src\\lexer\\lexer.mi"
     },

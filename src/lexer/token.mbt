@@ -24,4 +24,4 @@ pub(all) enum Token {
   Div // /
   Mod // %
   Eof
-} derive(Eq, Debug)
+} derive(Eq, Show, Debug)

@@ -6,7 +6,7 @@ pub(all) enum Value {
   VString(String)
   VArray(Array[Value])
   VObject(Map[String, Value])
-} derive(Eq, Debug)
+} derive(Eq, Show, Debug)
 
 /// Check if a `Value` is considered truthy.
 ///

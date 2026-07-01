@@ -207,6 +207,8 @@ pub fn Lexer::next_token(self : Lexer) -> Result[Token, String] {
         '*' => { self.pos += 1; return Ok(Token::Mul) }
         '/' => { self.pos += 1; return Ok(Token::Div) }
         '%' => { self.pos += 1; return Ok(Token::Mod) }
+        '(' => { self.pos += 1; return Ok(Token::LParen) }
+        ')' => { self.pos += 1; return Ok(Token::RParen) }
         '=' => {
           if self.peek_next() == Some('=') {
             self.pos += 2

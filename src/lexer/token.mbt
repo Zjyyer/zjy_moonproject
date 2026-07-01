@@ -23,5 +23,7 @@ pub(all) enum Token {
   Mul // *
   Div // /
   Mod // %
+  LParen // (
+  RParen // )
   Eof
 } derive(Eq, Show, Debug)

@@ -43,7 +43,7 @@ fn Evaluator::render_node(self : Evaluator, node : @parser.Node) -> Result[Strin
   }
 }
 
-fn Evaluator::eval_expr(self : Evaluator, expr : @parser.Expr) -> Result[@value.Value, String] {
+pub fn Evaluator::eval_expr(self : Evaluator, expr : @parser.Expr) -> Result[@value.Value, String] {
   match expr {
     @parser.Expr::EBool(b) => Ok(@value.Value::VBool(b))
     @parser.Expr::ENumber(n) => Ok(@value.Value::VNumber(n))
@@ -51,7 +51,23 @@ fn Evaluator::eval_expr(self : Evaluator, expr : @parser.Expr) -> Result[@value.
     @parser.Expr::EIdent(name) => {
       match self.ctx.get(name) {
         Some(v) => Ok(v)
-        None => Ok(@value.Value::VNull) // Or error
+        None => Ok(@value.Value::VNull)
+      }
+    }
+    @parser.Expr::EUnaryOp(op, inner) => {
+      let val = match self.eval_expr(inner) {
+        Ok(v) => v
+        Err(e) => return Err(e)
+      }
+      if op == "not" {
+        Ok(@value.Value::VBool(!val.is_truthy()))
+      } else if op == "-" {
+        match val {
+          @value.Value::VNumber(n) => Ok(@value.Value::VNumber(-n))
+          _ => Err("Unary minus expects a number")
+        }
+      } else {
+        Err("Unsupported unary operator: " + op)
       }
     }
     @parser.Expr::EBinaryOp(op, left, right) => {
@@ -59,16 +75,61 @@ fn Evaluator::eval_expr(self : Evaluator, expr : @parser.Expr) -> Result[@value.
         Ok(v) => v
         Err(e) => return Err(e)
       }
-      let r = match self.eval_expr(right) {
-        Ok(v) => v
-        Err(e) => return Err(e)
-      }
-      if op == "==" {
-        Ok(@value.Value::VBool(l == r))
-      } else if op == "!=" {
-        Ok(@value.Value::VBool(l != r))
+      // Handle logical operators with short-circuiting
+      if op == "and" {
+        if l.is_truthy() {
+          self.eval_expr(right)
+        } else {
+          Ok(l)
+        }
+      } else if op == "or" {
+        if l.is_truthy() {
+          Ok(l)
+        } else {
+          self.eval_expr(right)
+        }
       } else {
-        Err("Unsupported operator")
+        let r = match self.eval_expr(right) {
+          Ok(v) => v
+          Err(e) => return Err(e)
+        }
+        if op == "==" {
+          Ok(@value.Value::VBool(l == r))
+        } else if op == "!=" {
+          Ok(@value.Value::VBool(l != r))
+        } else {
+          // Arithmetic and comparison
+          match (l, r) {
+            (@value.Value::VNumber(n1), @value.Value::VNumber(n2)) => {
+              if op == "+" { Ok(@value.Value::VNumber(n1 + n2)) }
+              else if op == "-" { Ok(@value.Value::VNumber(n1 - n2)) }
+              else if op == "*" { Ok(@value.Value::VNumber(n1 * n2)) }
+              else if op == "/" { Ok(@value.Value::VNumber(n1 / n2)) }
+              else if op == "%" { Ok(@value.Value::VNumber(n1 % n2)) }
+              else if op == "<" { Ok(@value.Value::VBool(n1 < n2)) }
+              else if op == "<=" { Ok(@value.Value::VBool(n1 <= n2)) }
+              else if op == ">" { Ok(@value.Value::VBool(n1 > n2)) }
+              else if op == ">=" { Ok(@value.Value::VBool(n1 >= n2)) }
+              else { Err("Unsupported operator on numbers: " + op) }
+            }
+            (@value.Value::VString(s1), @value.Value::VString(s2)) => {
+              if op == "+" { Ok(@value.Value::VString(s1 + s2)) }
+              else if op == "<" { Ok(@value.Value::VBool(s1 < s2)) }
+              else if op == "<=" { Ok(@value.Value::VBool(s1 <= s2)) }
+              else if op == ">" { Ok(@value.Value::VBool(s1 > s2)) }
+              else if op == ">=" { Ok(@value.Value::VBool(s1 >= s2)) }
+              else { Err("Unsupported operator on strings: " + op) }
+            }
+            _ => {
+              // String concatenation fallback if one of them is string and op is +
+              if op == "+" {
+                Ok(@value.Value::VString(self.format_value(l) + self.format_value(r)))
+              } else {
+                Err("Type mismatch or unsupported operator: " + op)
+              }
+            }
+          }
+        }
       }
     }
     _ => Err("Unsupported expr in evaluator")

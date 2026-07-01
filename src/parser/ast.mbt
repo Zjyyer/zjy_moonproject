@@ -5,6 +5,7 @@ pub(all) enum Expr {
   EBool(Bool)
   EIdent(String)
   EFilter(Expr, String, Array[Expr]) // expr | filter_name(args...)
+  EUnaryOp(String, Expr) // e.g. not x, -y
   EBinaryOp(String, Expr, Expr) // e.g. a == b
 } derive(Eq, Show, Debug)
 

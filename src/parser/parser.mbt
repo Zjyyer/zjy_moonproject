@@ -199,33 +199,168 @@ fn Parser::expect(self : Parser, expected : @lexer.Token) -> Result[Unit, String
 
 // Simple expression parser. E.g. `ident`, `"string"`, `123`, `ident | filter`, `a == b`
 fn Parser::parse_expr(self : Parser) -> Result[Expr, String] {
+  self.parse_or()
+}
+
+fn Parser::parse_or(self : Parser) -> Result[Expr, String] {
+  let mut left = match self.parse_and() {
+    Ok(e) => e
+    Err(err) => return Err(err)
+  }
+  while true {
+    match self.peek() {
+      @lexer.Token::Ident("or") => {
+        let _ = self.consume()
+        let right = match self.parse_and() {
+          Ok(e) => e
+          Err(err) => return Err(err)
+        }
+        left = Expr::EBinaryOp("or", left, right)
+      }
+      _ => break
+    }
+  }
+  Ok(left)
+}
+
+fn Parser::parse_and(self : Parser) -> Result[Expr, String] {
+  let mut left = match self.parse_not() {
+    Ok(e) => e
+    Err(err) => return Err(err)
+  }
+  while true {
+    match self.peek() {
+      @lexer.Token::Ident("and") => {
+        let _ = self.consume()
+        let right = match self.parse_not() {
+          Ok(e) => e
+          Err(err) => return Err(err)
+        }
+        left = Expr::EBinaryOp("and", left, right)
+      }
+      _ => break
+    }
+  }
+  Ok(left)
+}
+
+fn Parser::parse_not(self : Parser) -> Result[Expr, String] {
+  match self.peek() {
+    @lexer.Token::Ident("not") => {
+      let _ = self.consume()
+      let expr = match self.parse_not() {
+        Ok(e) => e
+        Err(err) => return Err(err)
+      }
+      Ok(Expr::EUnaryOp("not", expr))
+    }
+    _ => self.parse_comparison()
+  }
+}
+
+fn Parser::parse_comparison(self : Parser) -> Result[Expr, String] {
+  let mut left = match self.parse_additive() {
+    Ok(e) => e
+    Err(err) => return Err(err)
+  }
+  while true {
+    match self.peek() {
+      @lexer.Token::Eq | @lexer.Token::Neq | @lexer.Token::Lt | @lexer.Token::Lte | @lexer.Token::Gt | @lexer.Token::Gte => {
+        let op = match self.consume() {
+          @lexer.Token::Eq => "=="
+          @lexer.Token::Neq => "!="
+          @lexer.Token::Lt => "<"
+          @lexer.Token::Lte => "<="
+          @lexer.Token::Gt => ">"
+          @lexer.Token::Gte => ">="
+          _ => ""
+        }
+        let right = match self.parse_additive() {
+          Ok(e) => e
+          Err(err) => return Err(err)
+        }
+        left = Expr::EBinaryOp(op, left, right)
+      }
+      _ => break
+    }
+  }
+  Ok(left)
+}
+
+fn Parser::parse_additive(self : Parser) -> Result[Expr, String] {
+  let mut left = match self.parse_multiplicative() {
+    Ok(e) => e
+    Err(err) => return Err(err)
+  }
+  while true {
+    match self.peek() {
+      @lexer.Token::Plus | @lexer.Token::Minus => {
+        let op = match self.consume() {
+          @lexer.Token::Plus => "+"
+          @lexer.Token::Minus => "-"
+          _ => ""
+        }
+        let right = match self.parse_multiplicative() {
+          Ok(e) => e
+          Err(err) => return Err(err)
+        }
+        left = Expr::EBinaryOp(op, left, right)
+      }
+      _ => break
+    }
+  }
+  Ok(left)
+}
+
+fn Parser::parse_multiplicative(self : Parser) -> Result[Expr, String] {
+  let mut left = match self.parse_unary() {
+    Ok(e) => e
+    Err(err) => return Err(err)
+  }
+  while true {
+    match self.peek() {
+      @lexer.Token::Mul | @lexer.Token::Div | @lexer.Token::Mod => {
+        let op = match self.consume() {
+          @lexer.Token::Mul => "*"
+          @lexer.Token::Div => "/"
+          @lexer.Token::Mod => "%"
+          _ => ""
+        }
+        let right = match self.parse_unary() {
+          Ok(e) => e
+          Err(err) => return Err(err)
+        }
+        left = Expr::EBinaryOp(op, left, right)
+      }
+      _ => break
+    }
+  }
+  Ok(left)
+}
+
+fn Parser::parse_unary(self : Parser) -> Result[Expr, String] {
+  match self.peek() {
+    @lexer.Token::Minus => {
+      let _ = self.consume()
+      let expr = match self.parse_unary() {
+        Ok(e) => e
+        Err(err) => return Err(err)
+      }
+      Ok(Expr::EUnaryOp("-", expr))
+    }
+    @lexer.Token::Plus => {
+      let _ = self.consume()
+      self.parse_unary()
+    }
+    _ => self.parse_filtered()
+  }
+}
+
+fn Parser::parse_filtered(self : Parser) -> Result[Expr, String] {
   let mut left = match self.parse_primary() {
     Ok(e) => e
     Err(err) => return Err(err)
   }
-  
-  // check for binary ops
-  match self.peek() {
-    @lexer.Token::Eq => {
-      let _ = self.consume()
-      let right = match self.parse_primary() {
-        Ok(e) => e
-        Err(err) => return Err(err)
-      }
-      left = Expr::EBinaryOp("==", left, right)
-    }
-    @lexer.Token::Neq => {
-      let _ = self.consume()
-      let right = match self.parse_primary() {
-        Ok(e) => e
-        Err(err) => return Err(err)
-      }
-      left = Expr::EBinaryOp("!=", left, right)
-    }
-    _ => ()
-  }
-  
-  // check for filters
   while true {
     match self.peek() {
       @lexer.Token::Pipe => {
@@ -234,13 +369,35 @@ fn Parser::parse_expr(self : Parser) -> Result[Expr, String] {
           @lexer.Token::Ident(name) => name
           _ => return Err("Expected filter name after |")
         }
-        // TODO: parse filter args if any. currently simplified to no args
-        left = Expr::EFilter(left, filter_name, [])
+        let args = []
+        if self.peek() == @lexer.Token::LParen {
+          let _ = self.consume()
+          if self.peek() != @lexer.Token::RParen {
+            while true {
+              let arg = match self.parse_expr() {
+                Ok(e) => e
+                Err(err) => return Err(err)
+              }
+              args.push(arg)
+              match self.peek() {
+                @lexer.Token::Comma => {
+                  let _ = self.consume()
+                }
+                @lexer.Token::RParen => break
+                _ => return Err("Expected ',' or ')' in filter arguments")
+              }
+            }
+          }
+          match self.consume() {
+            @lexer.Token::RParen => ()
+            _ => return Err("Expected ')' to close filter arguments")
+          }
+        }
+        left = Expr::EFilter(left, filter_name, args)
       }
       _ => break
     }
   }
-  
   Ok(left)
 }
 
@@ -251,6 +408,16 @@ fn Parser::parse_primary(self : Parser) -> Result[Expr, String] {
     @lexer.Token::Ident(name) => Ok(Expr::EIdent(name))
     @lexer.Token::StringLiteral(s) => Ok(Expr::EString(s))
     @lexer.Token::Number(n) => Ok(Expr::ENumber(n))
+    @lexer.Token::LParen => {
+      let expr = match self.parse_expr() {
+        Ok(e) => e
+        Err(err) => return Err(err)
+      }
+      match self.consume() {
+        @lexer.Token::RParen => Ok(expr)
+        _ => Err("Expected ')' to close group")
+      }
+    }
     _ => Err("Expected expression primary")
   }
 }

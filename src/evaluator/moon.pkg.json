@@ -3,6 +3,7 @@
   "import": [
     "moontera/src/parser",
     "moontera/src/context",
-    "moontera/src/value"
+    "moontera/src/value",
+    "moontera/src/filters"
   ]
 }

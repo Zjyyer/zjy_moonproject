@@ -159,7 +159,21 @@ fn Evaluator::eval_expr_with_ctx(self : Evaluator, expr : @parser.Expr, ctx : @c
         }
       }
     }
-    _ => Err("Unsupported expr in evaluator")
+    @parser.Expr::EFilter(inner, filter_name, args_exprs) => {
+      let val = match self.eval_expr_with_ctx(inner, ctx) {
+        Ok(v) => v
+        Err(e) => return Err(e)
+      }
+      let args = []
+      for arg_expr in args_exprs {
+        let arg_val = match self.eval_expr_with_ctx(arg_expr, ctx) {
+          Ok(v) => v
+          Err(e) => return Err(e)
+        }
+        args.push(arg_val)
+      }
+      @filters.apply_filter(filter_name, val, args)
+    }
   }
 }
 

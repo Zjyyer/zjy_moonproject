@@ -92,3 +92,41 @@ test "Evaluator for loop" {
   let result = eval.render(nodes).unwrap()
   assert_eq(result, "- Apple - Banana - Cherry ")
 }
+
+test "Evaluator filters" {
+  let ctx = @context.Context::new()
+  ctx.set("name", @value.Value::VString("MoonBit"))
+  ctx.set("empty_str", @value.Value::VString(""))
+  ctx.set("nil_val", @value.Value::VNull)
+  
+  let eval = Evaluator::new(ctx)
+  
+  // Test upper: name | upper
+  let expr_upper = @parser.Expr::EFilter(@parser.Expr::EIdent("name"), "upper", [])
+  assert_eq(eval.eval_expr(expr_upper).unwrap(), @value.Value::VString("MOONBIT"))
+  
+  // Test lower: name | lower
+  let expr_lower = @parser.Expr::EFilter(@parser.Expr::EIdent("name"), "lower", [])
+  assert_eq(eval.eval_expr(expr_lower).unwrap(), @value.Value::VString("moonbit"))
+  
+  // Test length: name | length
+  let expr_len = @parser.Expr::EFilter(@parser.Expr::EIdent("name"), "length", [])
+  assert_eq(eval.eval_expr(expr_len).unwrap(), @value.Value::VNumber(7.0))
+  
+  // Test default on null: nil_val | default("fallback")
+  let expr_def1 = @parser.Expr::EFilter(
+    @parser.Expr::EIdent("nil_val"),
+    "default",
+    [@parser.Expr::EString("fallback")]
+  )
+  assert_eq(eval.eval_expr(expr_def1).unwrap(), @value.Value::VString("fallback"))
+
+  // Test default on empty string: empty_str | default("fallback")
+  let expr_def2 = @parser.Expr::EFilter(
+    @parser.Expr::EIdent("empty_str"),
+    "default",
+    [@parser.Expr::EString("fallback")]
+  )
+  assert_eq(eval.eval_expr(expr_def2).unwrap(), @value.Value::VString("fallback"))
+}
+

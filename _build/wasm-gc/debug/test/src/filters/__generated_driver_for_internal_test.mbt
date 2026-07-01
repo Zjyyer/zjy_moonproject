@@ -389,52 +389,6 @@ fn moonbit_test_driver_internal_catch_error(
 // =========================================================
 // -=================== END JS SPECIFIC ====================
 // =========================================================
-// This file is introduced when tests without args is needed
-
-///|
-let moonbit_test_driver_internal_no_args_tests : MoonBitTestDriverInternalTestMap[
-  () -> Unit raise,
-] = {
-  "evaluator_test.mbt": {
-    0: (__test_6576616c7561746f725f746573742e6d6274_0, ["Evaluator basic"]),
-    1: (__test_6576616c7561746f725f746573742e6d6274_1, ["Evaluator operators"]),
-    2: (__test_6576616c7561746f725f746573742e6d6274_2, ["Evaluator for loop"]),
-    3: (__test_6576616c7561746f725f746573742e6d6274_3, ["Evaluator filters"]),
-  },
-  "evaluator.mbt": {
-  },
-}
-
-
-///|
-impl MoonBit_Test_Driver for MoonBit_Test_Driver_Internal_No_Args with fn run_test(
-  _,
-  filename,
-  index,
-  handle_result,
-  error_to_string,
-) {
-  if moonbit_test_driver_internal_no_args_tests.0.get(filename)
-    is Some(index_map) &&
-    index_map.get(index) is Some((f, attrs)) {
-    let name = if attrs is [name, ..] { name } else { "" }
-    if MOONBIT_TEST_DRIVER_INTERNAL_IS_NATIVE {
-      for attr in attrs {
-        if attr is [.. "panic", ..] {
-          raise MoonBitTestDriverInternalSkipTest(name~)
-        }
-      }
-    }
-    moonbit_test_driver_internal_catch_error(
-      f,
-      on_ok=() => handle_result(name, "", false),
-      on_err=err => handle_result(name, error_to_string(err), false),
-    )
-    true
-  } else {
-    false
-  }
-}
 ///|
 #cfg(target="native")
 #test_entry
@@ -544,7 +498,7 @@ fn moonbit_test_driver_internal_do_execute(
     let message = message.escape()
     @moonbitlang/core/prelude.println("----- BEGIN MOON TEST RESULT -----")
     @moonbitlang/core/prelude.println(
-      "{\"package\": \"moontera/src/evaluator\", \"filename\": \{file_name}, \"index\": \"\{index}\", \"test_name\": \{test_name}, \"message\": \{message}}",
+      "{\"package\": \"moontera/src/filters\", \"filename\": \{file_name}, \"index\": \"\{index}\", \"test_name\": \{test_name}, \"message\": \{message}}",
     )
     @moonbitlang/core/prelude.println("----- END MOON TEST RESULT -----")
   }

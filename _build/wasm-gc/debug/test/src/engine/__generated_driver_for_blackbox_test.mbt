@@ -397,6 +397,7 @@ let moonbit_test_driver_internal_no_args_tests : MoonBitTestDriverInternalTestMa
 ] = {
   "engine_test.mbt": {
     0: (__test_656e67696e655f746573742e6d6274_0, ["Engine basic"]),
+    1: (__test_656e67696e655f746573742e6d6274_1, ["Engine inheritance"]),
   },
   "engine.mbt": {
   },

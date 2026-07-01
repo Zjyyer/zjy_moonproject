@@ -65,7 +65,10 @@ fn Evaluator::render_node(self : Evaluator, node : @parser.Node, ctx : @context.
         _ => Err("For loop expects an array")
       }
     }
-    _ => Err("Unsupported node (Block/Extends not fully implemented yet)")
+    @parser.Node::Block(_name, body) => {
+      self.render_with_ctx(body, ctx)
+    }
+    @parser.Node::Extends(_) => Ok("")
   }
 }
 

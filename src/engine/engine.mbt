@@ -3,7 +3,7 @@ pub struct Engine {
 }
 
 pub fn Engine::new() -> Engine {
-  { templates: Map::of([]) }
+  { templates: Map([]) }
 }
 
 pub fn Engine::add_template(self : Engine, name : String, source : String) -> Result[Unit, String] {
@@ -83,7 +83,7 @@ fn Engine::resolve_inheritance(self : Engine, nodes : Array[@parser.Node]) -> Re
         Some(ast) => ast
         None => return Err("Parent template not found: " + parent_name)
       }
-      let child_blocks = Map::of([])
+      let child_blocks = Map([])
       collect_blocks(nodes, child_blocks)
       let merged_nodes = replace_blocks(parent_nodes, child_blocks)
       self.resolve_inheritance(merged_nodes)

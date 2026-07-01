@@ -4,11 +4,11 @@ pub struct Context {
 }
 
 pub fn Context::new() -> Context {
-  { vars: Map::of([]), parent: None }
+  { vars: Map([]), parent: None }
 }
 
 pub fn Context::new_child(parent : Context) -> Context {
-  { vars: Map::of([]), parent: Some(parent) }
+  { vars: Map([]), parent: Some(parent) }
 }
 
 pub fn Context::set(self : Context, key : String, val : @value.Value) -> Unit {

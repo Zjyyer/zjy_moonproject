@@ -399,6 +399,7 @@ let moonbit_test_driver_internal_no_args_tests : MoonBitTestDriverInternalTestMa
   },
   "lexer_test.mbt": {
     0: (__test_6c657865725f746573742e6d6274_0, ["Lexer basic tokens"]),
+    1: (__test_6c657865725f746573742e6d6274_1, ["Lexer float numbers"]),
   },
   "lexer.mbt": {
   },

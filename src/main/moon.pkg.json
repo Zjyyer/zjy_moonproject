@@ -1,0 +1,8 @@
+{
+  "is_main": true,
+  "import": [
+    "moontera/src/context",
+    "moontera/src/value",
+    "moontera/src/engine"
+  ]
+}

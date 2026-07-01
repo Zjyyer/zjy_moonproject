@@ -398,6 +398,7 @@ let moonbit_test_driver_internal_no_args_tests : MoonBitTestDriverInternalTestMa
   "evaluator_test.mbt": {
     0: (__test_6576616c7561746f725f746573742e6d6274_0, ["Evaluator basic"]),
     1: (__test_6576616c7561746f725f746573742e6d6274_1, ["Evaluator operators"]),
+    2: (__test_6576616c7561746f725f746573742e6d6274_2, ["Evaluator for loop"]),
   },
   "evaluator.mbt": {
   },

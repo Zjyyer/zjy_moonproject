@@ -7,9 +7,13 @@ pub fn Evaluator::new(ctx : @context.Context) -> Evaluator {
 }
 
 pub fn Evaluator::render(self : Evaluator, nodes : Array[@parser.Node]) -> Result[String, String] {
+  self.render_with_ctx(nodes, self.ctx)
+}
+
+fn Evaluator::render_with_ctx(self : Evaluator, nodes : Array[@parser.Node], ctx : @context.Context) -> Result[String, String] {
   let mut output = ""
   for node in nodes {
-    let s = match self.render_node(node) {
+    let s = match self.render_node(node, ctx) {
       Ok(s) => s
       Err(e) => return Err(e)
     }
@@ -18,44 +22,70 @@ pub fn Evaluator::render(self : Evaluator, nodes : Array[@parser.Node]) -> Resul
   Ok(output)
 }
 
-fn Evaluator::render_node(self : Evaluator, node : @parser.Node) -> Result[String, String] {
+fn Evaluator::render_node(self : Evaluator, node : @parser.Node, ctx : @context.Context) -> Result[String, String] {
   match node {
     @parser.Node::Text(text) => Ok(text)
     @parser.Node::Print(expr) => {
-      let val = match self.eval_expr(expr) {
+      let val = match self.eval_expr_with_ctx(expr, ctx) {
         Ok(v) => v
         Err(e) => return Err(e)
       }
       Ok(self.format_value(val))
     }
     @parser.Node::If(cond, then_body, else_body) => {
-      let cond_val = match self.eval_expr(cond) {
+      let cond_val = match self.eval_expr_with_ctx(cond, ctx) {
         Ok(v) => v
         Err(e) => return Err(e)
       }
       if cond_val.is_truthy() {
-        self.render(then_body)
+        self.render_with_ctx(then_body, ctx)
       } else {
-        self.render(else_body)
+        self.render_with_ctx(else_body, ctx)
       }
     }
-    _ => Err("Unsupported node (For/Block/Extends not fully implemented yet)")
+    @parser.Node::For(item_name, list_expr, body) => {
+      let val = match self.eval_expr_with_ctx(list_expr, ctx) {
+        Ok(v) => v
+        Err(e) => return Err(e)
+      }
+      match val {
+        @value.Value::VArray(arr) => {
+          let mut res = ""
+          for elem in arr {
+            let child_ctx = @context.Context::new_child(ctx)
+            child_ctx.set(item_name, elem)
+            let rendered = match self.render_with_ctx(body, child_ctx) {
+              Ok(s) => s
+              Err(e) => return Err(e)
+            }
+            res = res + rendered
+          }
+          Ok(res)
+        }
+        _ => Err("For loop expects an array")
+      }
+    }
+    _ => Err("Unsupported node (Block/Extends not fully implemented yet)")
   }
 }
 
 pub fn Evaluator::eval_expr(self : Evaluator, expr : @parser.Expr) -> Result[@value.Value, String] {
+  self.eval_expr_with_ctx(expr, self.ctx)
+}
+
+fn Evaluator::eval_expr_with_ctx(self : Evaluator, expr : @parser.Expr, ctx : @context.Context) -> Result[@value.Value, String] {
   match expr {
     @parser.Expr::EBool(b) => Ok(@value.Value::VBool(b))
     @parser.Expr::ENumber(n) => Ok(@value.Value::VNumber(n))
     @parser.Expr::EString(s) => Ok(@value.Value::VString(s))
     @parser.Expr::EIdent(name) => {
-      match self.ctx.get(name) {
+      match ctx.get(name) {
         Some(v) => Ok(v)
         None => Ok(@value.Value::VNull)
       }
     }
     @parser.Expr::EUnaryOp(op, inner) => {
-      let val = match self.eval_expr(inner) {
+      let val = match self.eval_expr_with_ctx(inner, ctx) {
         Ok(v) => v
         Err(e) => return Err(e)
       }
@@ -71,14 +101,13 @@ pub fn Evaluator::eval_expr(self : Evaluator, expr : @parser.Expr) -> Result[@va
       }
     }
     @parser.Expr::EBinaryOp(op, left, right) => {
-      let l = match self.eval_expr(left) {
+      let l = match self.eval_expr_with_ctx(left, ctx) {
         Ok(v) => v
         Err(e) => return Err(e)
       }
-      // Handle logical operators with short-circuiting
       if op == "and" {
         if l.is_truthy() {
-          self.eval_expr(right)
+          self.eval_expr_with_ctx(right, ctx)
         } else {
           Ok(l)
         }
@@ -86,10 +115,10 @@ pub fn Evaluator::eval_expr(self : Evaluator, expr : @parser.Expr) -> Result[@va
         if l.is_truthy() {
           Ok(l)
         } else {
-          self.eval_expr(right)
+          self.eval_expr_with_ctx(right, ctx)
         }
       } else {
-        let r = match self.eval_expr(right) {
+        let r = match self.eval_expr_with_ctx(right, ctx) {
           Ok(v) => v
           Err(e) => return Err(e)
         }
@@ -98,7 +127,6 @@ pub fn Evaluator::eval_expr(self : Evaluator, expr : @parser.Expr) -> Result[@va
         } else if op == "!=" {
           Ok(@value.Value::VBool(l != r))
         } else {
-          // Arithmetic and comparison
           match (l, r) {
             (@value.Value::VNumber(n1), @value.Value::VNumber(n2)) => {
               if op == "+" { Ok(@value.Value::VNumber(n1 + n2)) }
@@ -121,7 +149,6 @@ pub fn Evaluator::eval_expr(self : Evaluator, expr : @parser.Expr) -> Result[@va
               else { Err("Unsupported operator on strings: " + op) }
             }
             _ => {
-              // String concatenation fallback if one of them is string and op is +
               if op == "+" {
                 Ok(@value.Value::VString(self.format_value(l) + self.format_value(r)))
               } else {

@@ -63,3 +63,32 @@ test "Evaluator operators" {
   assert_eq(val_concat, @value.Value::VString("MoonBit User"))
 }
 
+test "Evaluator for loop" {
+  let ctx = @context.Context::new()
+  ctx.set(
+    "items",
+    @value.Value::VArray([
+      @value.Value::VString("Apple"),
+      @value.Value::VString("Banana"),
+      @value.Value::VString("Cherry")
+    ])
+  )
+  
+  let eval = Evaluator::new(ctx)
+  
+  // {% for fruit in items %}- {{ fruit }} {% endfor %}
+  let nodes = [
+    @parser.Node::For(
+      "fruit",
+      @parser.Expr::EIdent("items"),
+      [
+        @parser.Node::Text("- "),
+        @parser.Node::Print(@parser.Expr::EIdent("fruit")),
+        @parser.Node::Text(" ")
+      ]
+    )
+  ]
+  
+  let result = eval.render(nodes).unwrap()
+  assert_eq(result, "- Apple - Banana - Cherry ")
+}

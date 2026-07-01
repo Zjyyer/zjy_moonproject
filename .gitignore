@@ -1,3 +1,5 @@
-/target
-/.moon
-/.mooncakes
+_build/
+.moon/
+.mooncakes/
+target/
+*.wasm

@@ -1,0 +1,17 @@
+# MoonTera Code Examples
+
+This directory contains standalone examples showcasing how to use the MoonTera template engine in your MoonBit applications.
+
+## Examples List
+
+1. **[01_basic.mbt](file:///C:/Users/px830/Desktop/周继远/moontera/examples/01_basic.mbt)**: Demonstrates basic variable interpolation, conditionals, and arithmetic evaluations.
+2. **[02_inheritance.mbt](file:///C:/Users/px830/Desktop/周继远/moontera/examples/02_inheritance.mbt)**: Shows how to register parent/child templates and override block content.
+3. **[03_custom_filters.mbt](file:///C:/Users/px830/Desktop/周继远/moontera/examples/03_custom_filters.mbt)**: Illustrates applying built-in filters (`upper`, `lower`, `length`, `default`) on variables.
+
+## Running the CLI Demo
+
+You can also run the built-in interactive demo located in `src/main` by executing the following command at the root of the project:
+
+```bash
+moon run src/main
+```

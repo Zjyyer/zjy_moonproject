@@ -130,3 +130,48 @@ test "Evaluator filters" {
   assert_eq(eval.eval_expr(expr_def2).unwrap(), @value.Value::VString("fallback"))
 }
 
+test "Evaluator property access" {
+  let ctx = @context.Context::new()
+  let user_map : Map[String, @value.Value] = Map([])
+  user_map.set("name", @value.Value::VString("周继远"))
+  user_map.set("age", @value.Value::VNumber(20.0))
+  ctx.set("user", @value.Value::VObject(user_map))
+  
+  let eval = Evaluator::new(ctx)
+  
+  // user.name
+  let expr_name = @parser.Expr::EGet(@parser.Expr::EIdent("user"), "name")
+  assert_eq(eval.eval_expr(expr_name).unwrap(), @value.Value::VString("周继远"))
+  
+  // user.age
+  let expr_age = @parser.Expr::EGet(@parser.Expr::EIdent("user"), "age")
+  assert_eq(eval.eval_expr(expr_age).unwrap(), @value.Value::VNumber(20.0))
+}
+
+test "Evaluator loop helpers" {
+  let ctx = @context.Context::new()
+  ctx.set("items", @value.Value::VArray([
+    @value.Value::VString("A"),
+    @value.Value::VString("B")
+  ]))
+  
+  let eval = Evaluator::new(ctx)
+  
+  // {% for item in items %}{{ loop.index }}:{{ item }} {% endfor %}
+  let nodes = [
+    @parser.Node::For(
+      "item",
+      @parser.Expr::EIdent("items"),
+      [
+        @parser.Node::Print(@parser.Expr::EGet(@parser.Expr::EIdent("loop"), "index")),
+        @parser.Node::Text(":"),
+        @parser.Node::Print(@parser.Expr::EIdent("item")),
+        @parser.Node::Text(" ")
+      ]
+    )
+  ]
+  
+  let result = eval.render(nodes).unwrap()
+  assert_eq(result, "1:A 2:B ")
+}
+

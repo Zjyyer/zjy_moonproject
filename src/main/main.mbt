@@ -21,10 +21,15 @@ fn main {
   let child_html = "{% extends \"base.html\" %}" +
     "{% block title %}My Custom Page{% endblock %}" +
     "{% block content %}" +
+    "  <p>User Profile: <strong>{{ user.name }}</strong> (Role: {{ user.role }})</p>" +
     "  <h2>Fruits List</h2>" +
     "  <ul>" +
     "    {% for item in fruits %}" +
-    "      <li>{{ item | upper }}</li>" +
+    "      <li>" +
+    "        #{{ loop.index }} of {{ loop.length }} - {{ item | upper }}" +
+    "        {% if loop.first %} (First Item!){% endif %}" +
+    "        {% if loop.last %} (Last Item!){% endif %}" +
+    "      </li>" +
     "    {% endfor %}" +
     "  </ul>" +
     "  <p>Admin Status: {% if is_admin %}ACTIVE{% else %}INACTIVE{% endif %}</p>" +
@@ -44,6 +49,11 @@ fn main {
     @value.Value::VString("banana"),
     @value.Value::VString("cherry")
   ]))
+  
+  let user_map : Map[String, @value.Value] = Map([])
+  user_map.set("name", @value.Value::VString("周继远"))
+  user_map.set("role", @value.Value::VString("Administrator"))
+  ctx.set("user", @value.Value::VObject(user_map))
   
   // 3. Render
   match engine.render("child.html", ctx) {

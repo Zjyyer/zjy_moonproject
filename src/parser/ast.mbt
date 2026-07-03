@@ -7,6 +7,7 @@ pub(all) enum Expr {
   EFilter(Expr, String, Array[Expr]) // expr | filter_name(args...)
   EUnaryOp(String, Expr) // e.g. not x, -y
   EBinaryOp(String, Expr, Expr) // e.g. a == b
+  EGet(Expr, String) // expr.field
 } derive(Eq, Show, Debug)
 
 /// AST Nodes representing the template structure

@@ -356,8 +356,30 @@ fn Parser::parse_unary(self : Parser) -> Result[Expr, String] {
   }
 }
 
+fn Parser::parse_member(self : Parser) -> Result[Expr, String] {
+  let mut expr = match self.parse_primary() {
+    Ok(e) => e
+    Err(err) => return Err(err)
+  }
+  while true {
+    match self.peek() {
+      @lexer.Token::Dot => {
+        let _ = self.consume()
+        match self.consume() {
+          @lexer.Token::Ident(field) => {
+            expr = Expr::EGet(expr, field)
+          }
+          _ => return Err("Expected identifier after '.'")
+        }
+      }
+      _ => break
+    }
+  }
+  Ok(expr)
+}
+
 fn Parser::parse_filtered(self : Parser) -> Result[Expr, String] {
-  let mut left = match self.parse_primary() {
+  let mut left = match self.parse_member() {
     Ok(e) => e
     Err(err) => return Err(err)
   }

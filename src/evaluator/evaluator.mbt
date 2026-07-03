@@ -51,14 +51,27 @@ fn Evaluator::render_node(self : Evaluator, node : @parser.Node, ctx : @context.
       match val {
         @value.Value::VArray(arr) => {
           let mut res = ""
-          for elem in arr {
+          let len = arr.length()
+          let mut idx = 0
+          while idx < len {
+            let elem = arr[idx]
             let child_ctx = @context.Context::new_child(ctx)
             child_ctx.set(item_name, elem)
+            
+            let loop_map : Map[String, @value.Value] = Map([])
+            loop_map.set("index0", @value.Value::VNumber(idx.to_double()))
+            loop_map.set("index", @value.Value::VNumber((idx + 1).to_double()))
+            loop_map.set("first", @value.Value::VBool(idx == 0))
+            loop_map.set("last", @value.Value::VBool(idx == len - 1))
+            loop_map.set("length", @value.Value::VNumber(len.to_double()))
+            child_ctx.set("loop", @value.Value::VObject(loop_map))
+            
             let rendered = match self.render_with_ctx(body, child_ctx) {
               Ok(s) => s
               Err(e) => return Err(e)
             }
             res = res + rendered
+            idx = idx + 1
           }
           Ok(res)
         }
@@ -85,6 +98,21 @@ fn Evaluator::eval_expr_with_ctx(self : Evaluator, expr : @parser.Expr, ctx : @c
       match ctx.get(name) {
         Some(v) => Ok(v)
         None => Ok(@value.Value::VNull)
+      }
+    }
+    @parser.Expr::EGet(inner, field) => {
+      let val = match self.eval_expr_with_ctx(inner, ctx) {
+        Ok(v) => v
+        Err(e) => return Err(e)
+      }
+      match val {
+        @value.Value::VObject(obj) => {
+          match obj.get(field) {
+            Some(v) => Ok(v)
+            None => Ok(@value.Value::VNull)
+          }
+        }
+        _ => Ok(@value.Value::VNull)
       }
     }
     @parser.Expr::EUnaryOp(op, inner) => {

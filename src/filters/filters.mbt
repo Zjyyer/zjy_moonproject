@@ -273,6 +273,22 @@ pub fn apply_filter(name : String, val : @value.Value, args : Array[@value.Value
       @value.Value::VString(s) => Ok(@value.Value::VString(string_truncate(s, max_len)))
       _ => Err("Filter 'truncate' expects a string")
     }
+  } else if name == "abs" {
+    match val {
+      @value.Value::VNumber(n) => {
+        let r = if n < 0.0 { -n } else { n }
+        Ok(@value.Value::VNumber(r))
+      }
+      _ => Err("Filter 'abs' expects a number")
+    }
+  } else if name == "round" {
+    match val {
+      @value.Value::VNumber(n) => {
+        let r = if n < 0.0 { (n - 0.5).to_int().to_double() } else { (n + 0.5).to_int().to_double() }
+        Ok(@value.Value::VNumber(r))
+      }
+      _ => Err("Filter 'round' expects a number")
+    }
   } else {
     Err("Unknown filter: " + name)
   }

@@ -259,3 +259,23 @@ test "Evaluator slice, replace & truncate filters" {
   assert_eq(eval.eval_expr(expr_truncate).unwrap(), @value.Value::VString("moonbit..."))
 }
 
+test "Evaluator math filters" {
+  let ctx = @context.Context::new()
+  ctx.set("num1", @value.Value::VNumber(-15.4))
+  ctx.set("num2", @value.Value::VNumber(3.6))
+  
+  let eval = Evaluator::new(ctx)
+  
+  // num1 | abs -> 15.4
+  let expr_abs = @parser.Expr::EFilter(@parser.Expr::EIdent("num1"), "abs", [])
+  assert_eq(eval.eval_expr(expr_abs).unwrap(), @value.Value::VNumber(15.4))
+  
+  // num1 | round -> -15.0
+  let expr_round1 = @parser.Expr::EFilter(@parser.Expr::EIdent("num1"), "round", [])
+  assert_eq(eval.eval_expr(expr_round1).unwrap(), @value.Value::VNumber(-15.0))
+  
+  // num2 | round -> 4.0
+  let expr_round2 = @parser.Expr::EFilter(@parser.Expr::EIdent("num2"), "round", [])
+  assert_eq(eval.eval_expr(expr_round2).unwrap(), @value.Value::VNumber(4.0))
+}
+

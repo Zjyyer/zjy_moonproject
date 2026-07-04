@@ -211,3 +211,51 @@ test "Evaluator join & contains filters" {
   assert_eq(eval.eval_expr(expr_contains_arr).unwrap(), @value.Value::VBool(true))
 }
 
+test "Evaluator slice, replace & truncate filters" {
+  let ctx = @context.Context::new()
+  ctx.set("text", @value.Value::VString("moonbit_template"))
+  ctx.set("words", @value.Value::VArray([
+    @value.Value::VString("A"),
+    @value.Value::VString("B"),
+    @value.Value::VString("C"),
+    @value.Value::VString("D")
+  ]))
+  
+  let eval = Evaluator::new(ctx)
+  
+  // text | slice(0, 7) -> "moonbit"
+  let expr_slice_str = @parser.Expr::EFilter(
+    @parser.Expr::EIdent("text"),
+    "slice",
+    [@parser.Expr::ENumber(0.0), @parser.Expr::ENumber(7.0)]
+  )
+  assert_eq(eval.eval_expr(expr_slice_str).unwrap(), @value.Value::VString("moonbit"))
+  
+  // words | slice(1, 3) -> ["B", "C"]
+  let expr_slice_arr = @parser.Expr::EFilter(
+    @parser.Expr::EIdent("words"),
+    "slice",
+    [@parser.Expr::ENumber(1.0), @parser.Expr::ENumber(3.0)]
+  )
+  assert_eq(eval.eval_expr(expr_slice_arr).unwrap(), @value.Value::VArray([
+    @value.Value::VString("B"),
+    @value.Value::VString("C")
+  ]))
+  
+  // text | replace("template", "engine") -> "moonbit_engine"
+  let expr_replace = @parser.Expr::EFilter(
+    @parser.Expr::EIdent("text"),
+    "replace",
+    [@parser.Expr::EString("template"), @parser.Expr::EString("engine")]
+  )
+  assert_eq(eval.eval_expr(expr_replace).unwrap(), @value.Value::VString("moonbit_engine"))
+  
+  // text | truncate(7) -> "moonbit..."
+  let expr_truncate = @parser.Expr::EFilter(
+    @parser.Expr::EIdent("text"),
+    "truncate",
+    [@parser.Expr::ENumber(7.0)]
+  )
+  assert_eq(eval.eval_expr(expr_truncate).unwrap(), @value.Value::VString("moonbit..."))
+}
+

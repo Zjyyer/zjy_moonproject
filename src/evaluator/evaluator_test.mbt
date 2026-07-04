@@ -175,3 +175,39 @@ test "Evaluator loop helpers" {
   assert_eq(result, "1:A 2:B ")
 }
 
+test "Evaluator join & contains filters" {
+  let ctx = @context.Context::new()
+  ctx.set("words", @value.Value::VArray([
+    @value.Value::VString("apple"),
+    @value.Value::VString("banana"),
+    @value.Value::VString("cherry")
+  ]))
+  ctx.set("phrase", @value.Value::VString("hello moonbit template"))
+  
+  let eval = Evaluator::new(ctx)
+  
+  // words | join(", ")
+  let expr_join = @parser.Expr::EFilter(
+    @parser.Expr::EIdent("words"),
+    "join",
+    [@parser.Expr::EString(", ")]
+  )
+  assert_eq(eval.eval_expr(expr_join).unwrap(), @value.Value::VString("apple, banana, cherry"))
+  
+  // phrase | contains("moonbit")
+  let expr_contains_str = @parser.Expr::EFilter(
+    @parser.Expr::EIdent("phrase"),
+    "contains",
+    [@parser.Expr::EString("moonbit")]
+  )
+  assert_eq(eval.eval_expr(expr_contains_str).unwrap(), @value.Value::VBool(true))
+  
+  // words | contains("banana")
+  let expr_contains_arr = @parser.Expr::EFilter(
+    @parser.Expr::EIdent("words"),
+    "contains",
+    [@parser.Expr::EString("banana")]
+  )
+  assert_eq(eval.eval_expr(expr_contains_arr).unwrap(), @value.Value::VBool(true))
+}
+

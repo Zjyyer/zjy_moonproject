@@ -4,6 +4,7 @@
     "moontera/src/lexer",
     "moontera/src/parser",
     "moontera/src/context",
-    "moontera/src/evaluator"
+    "moontera/src/evaluator",
+    "moontera/src/value"
   ]
 }

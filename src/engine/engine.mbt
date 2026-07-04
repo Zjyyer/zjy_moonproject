@@ -105,3 +105,7 @@ pub fn Engine::render(self : Engine, name : String, ctx : @context.Context) -> R
     None => Err("Template not found: " + name)
   }
 }
+
+fn _dummy_use_value() -> @value.Value {
+  @value.Value::VNull
+}

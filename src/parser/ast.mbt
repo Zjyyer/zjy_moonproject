@@ -8,7 +8,11 @@ pub(all) enum Expr {
   EUnaryOp(String, Expr) // e.g. not x, -y
   EBinaryOp(String, Expr, Expr) // e.g. a == b
   EGet(Expr, String) // expr.field
-} derive(Eq, Show, Debug)
+} derive(Eq, Debug)
+
+pub impl Show for Expr with output(self, logger) {
+  self.output(logger)
+}
 
 /// AST Nodes representing the template structure
 pub(all) enum Node {
@@ -18,4 +22,8 @@ pub(all) enum Node {
   For(String, Expr, Array[Node]) // {% for item in list_expr %} body {% endfor %}
   Block(String, Array[Node]) // {% block name %} body {% endblock %}
   Extends(String) // {% extends "name" %}
-} derive(Eq, Show, Debug)
+} derive(Eq, Debug)
+
+pub impl Show for Node with output(self, logger) {
+  self.output(logger)
+}

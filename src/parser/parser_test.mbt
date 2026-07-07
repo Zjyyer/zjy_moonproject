@@ -18,6 +18,6 @@ test "Parser basic" {
       assert_eq(then_body[0], Node::Text(" yes "))
       assert_eq(else_body.length(), 0)
     }
-    _ => fail!("Expected If node")
+    _ => fail("Expected If node")
   }
 }

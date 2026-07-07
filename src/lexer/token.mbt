@@ -26,4 +26,8 @@ pub(all) enum Token {
   LParen // (
   RParen // )
   Eof
-} derive(Eq, Show, Debug)
+} derive(Eq, Debug)
+
+pub impl Show for Token with output(self, logger) {
+  self.output(logger)
+}

@@ -6,7 +6,11 @@ pub(all) enum Value {
   VString(String)
   VArray(Array[Value])
   VObject(Map[String, Value])
-} derive(Eq, Show, Debug)
+} derive(Eq, Debug)
+
+pub impl Show for Value with output(self, logger) {
+  self.output(logger)
+}
 
 /// Check if a `Value` is considered truthy.
 ///
@@ -22,6 +26,6 @@ pub fn Value::is_truthy(self : Value) -> Bool {
     VNumber(n) => n != 0.0
     VString(s) => s.length() > 0
     VArray(arr) => arr.length() > 0
-    VObject(obj) => obj.size() > 0
+    VObject(obj) => obj.length() > 0
   }
 }

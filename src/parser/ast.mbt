@@ -1,3 +1,4 @@
+///|
 /// AST Expressions used inside tags like {{ ... }} and {% if ... %}
 pub(all) enum Expr {
   EString(String)
@@ -10,10 +11,12 @@ pub(all) enum Expr {
   EGet(Expr, String) // expr.field
 } derive(Eq, Debug)
 
-pub impl Show for Expr with output(self, logger) {
+///|
+pub impl Show for Expr with fn output(self, logger) {
   self.output(logger)
 }
 
+///|
 /// AST Nodes representing the template structure
 pub(all) enum Node {
   Text(String)
@@ -24,6 +27,7 @@ pub(all) enum Node {
   Extends(String) // {% extends "name" %}
 } derive(Eq, Debug)
 
-pub impl Show for Node with output(self, logger) {
+///|
+pub impl Show for Node with fn output(self, logger) {
   self.output(logger)
 }

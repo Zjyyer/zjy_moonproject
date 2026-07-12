@@ -1,16 +1,27 @@
+///|
 pub struct Evaluator {
   ctx : @context.Context
 }
 
+///|
 pub fn Evaluator::new(ctx : @context.Context) -> Evaluator {
   { ctx, }
 }
 
-pub fn Evaluator::render(self : Evaluator, nodes : Array[@parser.Node]) -> Result[String, String] {
+///|
+pub fn Evaluator::render(
+  self : Evaluator,
+  nodes : Array[@parser.Node],
+) -> Result[String, String] {
   self.render_with_ctx(nodes, self.ctx)
 }
 
-fn Evaluator::render_with_ctx(self : Evaluator, nodes : Array[@parser.Node], ctx : @context.Context) -> Result[String, String] {
+///|
+fn Evaluator::render_with_ctx(
+  self : Evaluator,
+  nodes : Array[@parser.Node],
+  ctx : @context.Context,
+) -> Result[String, String] {
   let mut output = ""
   for node in nodes {
     let s = match self.render_node(node, ctx) {
@@ -22,7 +33,12 @@ fn Evaluator::render_with_ctx(self : Evaluator, nodes : Array[@parser.Node], ctx
   Ok(output)
 }
 
-fn Evaluator::render_node(self : Evaluator, node : @parser.Node, ctx : @context.Context) -> Result[String, String] {
+///|
+fn Evaluator::render_node(
+  self : Evaluator,
+  node : @parser.Node,
+  ctx : @context.Context,
+) -> Result[String, String] {
   match node {
     @parser.Node::Text(text) => Ok(text)
     @parser.Node::Print(expr) => {
@@ -57,7 +73,7 @@ fn Evaluator::render_node(self : Evaluator, node : @parser.Node, ctx : @context.
             let elem = arr[idx]
             let child_ctx = @context.Context::new_child(ctx)
             child_ctx.set(item_name, elem)
-            
+
             let loop_map : Map[String, @value.Value] = Map([])
             loop_map.set("index0", @value.Value::VNumber(idx.to_double()))
             loop_map.set("index", @value.Value::VNumber((idx + 1).to_double()))
@@ -65,7 +81,7 @@ fn Evaluator::render_node(self : Evaluator, node : @parser.Node, ctx : @context.
             loop_map.set("last", @value.Value::VBool(idx == len - 1))
             loop_map.set("length", @value.Value::VNumber(len.to_double()))
             child_ctx.set("loop", @value.Value::VObject(loop_map))
-            
+
             let rendered = match self.render_with_ctx(body, child_ctx) {
               Ok(s) => s
               Err(e) => return Err(e)
@@ -78,40 +94,45 @@ fn Evaluator::render_node(self : Evaluator, node : @parser.Node, ctx : @context.
         _ => Err("For loop expects an array")
       }
     }
-    @parser.Node::Block(_name, body) => {
-      self.render_with_ctx(body, ctx)
-    }
+    @parser.Node::Block(_name, body) => self.render_with_ctx(body, ctx)
     @parser.Node::Extends(_) => Ok("")
   }
 }
 
-pub fn Evaluator::eval_expr(self : Evaluator, expr : @parser.Expr) -> Result[@value.Value, String] {
+///|
+pub fn Evaluator::eval_expr(
+  self : Evaluator,
+  expr : @parser.Expr,
+) -> Result[@value.Value, String] {
   self.eval_expr_with_ctx(expr, self.ctx)
 }
 
-fn Evaluator::eval_expr_with_ctx(self : Evaluator, expr : @parser.Expr, ctx : @context.Context) -> Result[@value.Value, String] {
+///|
+fn Evaluator::eval_expr_with_ctx(
+  self : Evaluator,
+  expr : @parser.Expr,
+  ctx : @context.Context,
+) -> Result[@value.Value, String] {
   match expr {
     @parser.Expr::EBool(b) => Ok(@value.Value::VBool(b))
     @parser.Expr::ENumber(n) => Ok(@value.Value::VNumber(n))
     @parser.Expr::EString(s) => Ok(@value.Value::VString(s))
-    @parser.Expr::EIdent(name) => {
+    @parser.Expr::EIdent(name) =>
       match ctx.get(name) {
         Some(v) => Ok(v)
         None => Ok(@value.Value::VNull)
       }
-    }
     @parser.Expr::EGet(inner, field) => {
       let val = match self.eval_expr_with_ctx(inner, ctx) {
         Ok(v) => v
         Err(e) => return Err(e)
       }
       match val {
-        @value.Value::VObject(obj) => {
+        @value.Value::VObject(obj) =>
           match obj.get(field) {
             Some(v) => Ok(v)
             None => Ok(@value.Value::VNull)
           }
-        }
         _ => Ok(@value.Value::VNull)
       }
     }
@@ -159,33 +180,52 @@ fn Evaluator::eval_expr_with_ctx(self : Evaluator, expr : @parser.Expr, ctx : @c
           Ok(@value.Value::VBool(l != r))
         } else {
           match (l, r) {
-            (@value.Value::VNumber(n1), @value.Value::VNumber(n2)) => {
-              if op == "+" { Ok(@value.Value::VNumber(n1 + n2)) }
-              else if op == "-" { Ok(@value.Value::VNumber(n1 - n2)) }
-              else if op == "*" { Ok(@value.Value::VNumber(n1 * n2)) }
-              else if op == "/" { Ok(@value.Value::VNumber(n1 / n2)) }
-              else if op == "%" { Ok(@value.Value::VNumber(n1 % n2)) }
-              else if op == "<" { Ok(@value.Value::VBool(n1 < n2)) }
-              else if op == "<=" { Ok(@value.Value::VBool(n1 <= n2)) }
-              else if op == ">" { Ok(@value.Value::VBool(n1 > n2)) }
-              else if op == ">=" { Ok(@value.Value::VBool(n1 >= n2)) }
-              else { Err("Unsupported operator on numbers: " + op) }
-            }
-            (@value.Value::VString(s1), @value.Value::VString(s2)) => {
-              if op == "+" { Ok(@value.Value::VString(s1 + s2)) }
-              else if op == "<" { Ok(@value.Value::VBool(s1 < s2)) }
-              else if op == "<=" { Ok(@value.Value::VBool(s1 <= s2)) }
-              else if op == ">" { Ok(@value.Value::VBool(s1 > s2)) }
-              else if op == ">=" { Ok(@value.Value::VBool(s1 >= s2)) }
-              else { Err("Unsupported operator on strings: " + op) }
-            }
-            _ => {
+            (@value.Value::VNumber(n1), @value.Value::VNumber(n2)) =>
               if op == "+" {
-                Ok(@value.Value::VString(self.format_value(l) + self.format_value(r)))
+                Ok(@value.Value::VNumber(n1 + n2))
+              } else if op == "-" {
+                Ok(@value.Value::VNumber(n1 - n2))
+              } else if op == "*" {
+                Ok(@value.Value::VNumber(n1 * n2))
+              } else if op == "/" {
+                Ok(@value.Value::VNumber(n1 / n2))
+              } else if op == "%" {
+                Ok(@value.Value::VNumber(n1 % n2))
+              } else if op == "<" {
+                Ok(@value.Value::VBool(n1 < n2))
+              } else if op == "<=" {
+                Ok(@value.Value::VBool(n1 <= n2))
+              } else if op == ">" {
+                Ok(@value.Value::VBool(n1 > n2))
+              } else if op == ">=" {
+                Ok(@value.Value::VBool(n1 >= n2))
+              } else {
+                Err("Unsupported operator on numbers: " + op)
+              }
+            (@value.Value::VString(s1), @value.Value::VString(s2)) =>
+              if op == "+" {
+                Ok(@value.Value::VString(s1 + s2))
+              } else if op == "<" {
+                Ok(@value.Value::VBool(s1 < s2))
+              } else if op == "<=" {
+                Ok(@value.Value::VBool(s1 <= s2))
+              } else if op == ">" {
+                Ok(@value.Value::VBool(s1 > s2))
+              } else if op == ">=" {
+                Ok(@value.Value::VBool(s1 >= s2))
+              } else {
+                Err("Unsupported operator on strings: " + op)
+              }
+            _ =>
+              if op == "+" {
+                Ok(
+                  @value.Value::VString(
+                    self.format_value(l) + self.format_value(r),
+                  ),
+                )
               } else {
                 Err("Type mismatch or unsupported operator: " + op)
               }
-            }
           }
         }
       }
@@ -208,6 +248,7 @@ fn Evaluator::eval_expr_with_ctx(self : Evaluator, expr : @parser.Expr, ctx : @c
   }
 }
 
+///|
 fn Evaluator::format_value(_self : Evaluator, v : @value.Value) -> String {
   match v {
     @value.Value::VNull => ""

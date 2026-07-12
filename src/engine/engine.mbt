@@ -1,12 +1,19 @@
+///|
 pub struct Engine {
   templates : Map[String, Array[@parser.Node]]
 }
 
+///|
 pub fn Engine::new() -> Engine {
   { templates: Map([]) }
 }
 
-pub fn Engine::add_template(self : Engine, name : String, source : String) -> Result[Unit, String] {
+///|
+pub fn Engine::add_template(
+  self : Engine,
+  name : String,
+  source : String,
+) -> Result[Unit, String] {
   let lexer = @lexer.Lexer::new(source)
   let tokens = match lexer.tokenize() {
     Ok(t) => t
@@ -21,7 +28,11 @@ pub fn Engine::add_template(self : Engine, name : String, source : String) -> Re
   Ok(())
 }
 
-fn collect_blocks(nodes : Array[@parser.Node], blocks : Map[String, Array[@parser.Node]]) -> Unit {
+///|
+fn collect_blocks(
+  nodes : Array[@parser.Node],
+  blocks : Map[String, Array[@parser.Node]],
+) -> Unit {
   for node in nodes {
     match node {
       @parser.Node::Block(name, body) => {
@@ -32,15 +43,17 @@ fn collect_blocks(nodes : Array[@parser.Node], blocks : Map[String, Array[@parse
         collect_blocks(then_body, blocks)
         collect_blocks(else_body, blocks)
       }
-      @parser.Node::For(_, _, body) => {
-        collect_blocks(body, blocks)
-      }
+      @parser.Node::For(_, _, body) => collect_blocks(body, blocks)
       _ => ()
     }
   }
 }
 
-fn replace_blocks(nodes : Array[@parser.Node], blocks : Map[String, Array[@parser.Node]]) -> Array[@parser.Node] {
+///|
+fn replace_blocks(
+  nodes : Array[@parser.Node],
+  blocks : Map[String, Array[@parser.Node]],
+) -> Array[@parser.Node] {
   let result = []
   for node in nodes {
     match node {
@@ -66,7 +79,8 @@ fn replace_blocks(nodes : Array[@parser.Node], blocks : Map[String, Array[@parse
   result
 }
 
-fn find_extends(nodes : Array[@parser.Node]) -> Option[String] {
+///|
+fn find_extends(nodes : Array[@parser.Node]) -> String? {
   for node in nodes {
     match node {
       @parser.Node::Extends(name) => return Some(name)
@@ -76,7 +90,11 @@ fn find_extends(nodes : Array[@parser.Node]) -> Option[String] {
   None
 }
 
-fn Engine::resolve_inheritance(self : Engine, nodes : Array[@parser.Node]) -> Result[Array[@parser.Node], String] {
+///|
+fn Engine::resolve_inheritance(
+  self : Engine,
+  nodes : Array[@parser.Node],
+) -> Result[Array[@parser.Node], String] {
   match find_extends(nodes) {
     Some(parent_name) => {
       let parent_nodes = match self.templates.get(parent_name) {
@@ -92,7 +110,12 @@ fn Engine::resolve_inheritance(self : Engine, nodes : Array[@parser.Node]) -> Re
   }
 }
 
-pub fn Engine::render(self : Engine, name : String, ctx : @context.Context) -> Result[String, String] {
+///|
+pub fn Engine::render(
+  self : Engine,
+  name : String,
+  ctx : @context.Context,
+) -> Result[String, String] {
   match self.templates.get(name) {
     Some(ast) => {
       let resolved_ast = match self.resolve_inheritance(ast) {
@@ -106,6 +129,7 @@ pub fn Engine::render(self : Engine, name : String, ctx : @context.Context) -> R
   }
 }
 
+///|
 fn _dummy_use_value() -> @value.Value {
   @value.Value::VNull
 }

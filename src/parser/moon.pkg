@@ -1,0 +1,7 @@
+import {
+  "Zjyyer/moontera/src/lexer",
+}
+
+options(
+  is_main: false,
+)

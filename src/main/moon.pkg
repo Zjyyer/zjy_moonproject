@@ -1,0 +1,9 @@
+import {
+  "Zjyyer/moontera/src/context",
+  "Zjyyer/moontera/src/value",
+  "Zjyyer/moontera/src/engine",
+}
+
+options(
+  is_main: true,
+)

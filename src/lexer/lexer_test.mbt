@@ -1,3 +1,4 @@
+///|
 test "Lexer basic tokens" {
   let input = "hello {{ name }} {% if x == 1 %} yes {% endif %}"
   let lexer = Lexer::new(input)
@@ -20,6 +21,7 @@ test "Lexer basic tokens" {
   assert_eq(tokens[15], Token::Eof)
 }
 
+///|
 test "Lexer float numbers" {
   let input = "{{ 12.34 }} {{ 0.56 }}"
   let lexer = Lexer::new(input)
@@ -32,4 +34,3 @@ test "Lexer float numbers" {
   assert_eq(tokens[5], Token::Number(0.56))
   assert_eq(tokens[6], Token::VariableEnd)
 }
-

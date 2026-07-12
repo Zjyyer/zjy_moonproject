@@ -1,0 +1,18 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Zjyyer/moontera/src/filters"
+
+import {
+  "Zjyyer/moontera/src/value",
+}
+
+// Values
+pub fn apply_filter(String, @value.Value, Array[@value.Value]) -> Result[@value.Value, String]
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

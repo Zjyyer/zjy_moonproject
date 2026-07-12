@@ -1,0 +1,25 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Zjyyer/moontera/src/evaluator"
+
+import {
+  "Zjyyer/moontera/src/context",
+  "Zjyyer/moontera/src/parser",
+  "Zjyyer/moontera/src/value",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub struct Evaluator {
+  ctx : @context.Context
+}
+pub fn Evaluator::eval_expr(Self, @parser.Expr) -> Result[@value.Value, String]
+pub fn Evaluator::new(@context.Context) -> Self
+pub fn Evaluator::render(Self, Array[@parser.Node]) -> Result[String, String]
+
+// Type aliases
+
+// Traits
+

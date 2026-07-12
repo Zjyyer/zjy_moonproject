@@ -9,8 +9,8 @@ Thank you for your interest in contributing to MoonTera! This document provides 
    
 2. **Clone the Repository**:
    ```bash
-   git clone https://github.com/Zjyyer/zjy_moonproject.git
-   cd zjy_moonproject
+   git clone https://github.com/Zjyyer/MoonTera.git
+   cd MoonTera
    ```
 
 ## Development Commands

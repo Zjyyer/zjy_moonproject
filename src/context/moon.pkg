@@ -1,0 +1,7 @@
+import {
+  "Zjyyer/moontera/src/value",
+}
+
+options(
+  is_main: false,
+)

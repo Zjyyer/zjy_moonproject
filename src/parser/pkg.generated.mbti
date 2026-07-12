@@ -1,0 +1,46 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Zjyyer/moontera/src/parser"
+
+import {
+  "Zjyyer/moontera/src/lexer",
+  "moonbitlang/core/debug",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub(all) enum Expr {
+  EString(String)
+  ENumber(Double)
+  EBool(Bool)
+  EIdent(String)
+  EFilter(Expr, String, Array[Expr])
+  EUnaryOp(String, Expr)
+  EBinaryOp(String, Expr, Expr)
+  EGet(Expr, String)
+} derive(Eq, @debug.Debug)
+pub impl Show for Expr
+
+pub(all) enum Node {
+  Text(String)
+  Print(Expr)
+  If(Expr, Array[Node], Array[Node])
+  For(String, Expr, Array[Node])
+  Block(String, Array[Node])
+  Extends(String)
+} derive(Eq, @debug.Debug)
+pub impl Show for Node
+
+pub struct Parser {
+  tokens : Array[@lexer.Token]
+  mut pos : Int
+}
+pub fn Parser::new(Array[@lexer.Token]) -> Self
+pub fn Parser::parse(Self) -> Result[Array[Node], String]
+
+// Type aliases
+
+// Traits
+

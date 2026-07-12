@@ -1,0 +1,25 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Zjyyer/moontera/src/context"
+
+import {
+  "Zjyyer/moontera/src/value",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub struct Context {
+  vars : Map[String, @value.Value]
+  parent : Context?
+}
+pub fn Context::get(Self, String) -> @value.Value?
+pub fn Context::new() -> Self
+pub fn Context::new_child(Self) -> Self
+pub fn Context::set(Self, String, @value.Value) -> Unit
+
+// Type aliases
+
+// Traits
+

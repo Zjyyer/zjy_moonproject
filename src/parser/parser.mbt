@@ -1,12 +1,15 @@
+///|
 pub struct Parser {
   tokens : Array[@lexer.Token]
   mut pos : Int
 }
 
+///|
 pub fn Parser::new(tokens : Array[@lexer.Token]) -> Parser {
   { tokens, pos: 0 }
 }
 
+///|
 fn Parser::peek(self : Parser) -> @lexer.Token {
   if self.pos < self.tokens.length() {
     self.tokens[self.pos]
@@ -15,6 +18,7 @@ fn Parser::peek(self : Parser) -> @lexer.Token {
   }
 }
 
+///|
 fn Parser::peek_next(self : Parser) -> @lexer.Token {
   if self.pos + 1 < self.tokens.length() {
     self.tokens[self.pos + 1]
@@ -23,6 +27,7 @@ fn Parser::peek_next(self : Parser) -> @lexer.Token {
   }
 }
 
+///|
 fn Parser::consume(self : Parser) -> @lexer.Token {
   let tok = self.peek()
   if self.pos < self.tokens.length() {
@@ -31,10 +36,12 @@ fn Parser::consume(self : Parser) -> @lexer.Token {
   tok
 }
 
+///|
 pub fn Parser::parse(self : Parser) -> Result[Array[Node], String] {
   self.parse_nodes()
 }
 
+///|
 fn Parser::parse_nodes(self : Parser) -> Result[Array[Node], String] {
   let nodes = []
   while true {
@@ -57,12 +64,13 @@ fn Parser::parse_nodes(self : Parser) -> Result[Array[Node], String] {
       }
       @lexer.Token::BlockStart => {
         match self.peek_next() {
-          @lexer.Token::Ident("endif") | @lexer.Token::Ident("else") | @lexer.Token::Ident("endfor") | @lexer.Token::Ident("endblock") => {
-            break
-          }
+          @lexer.Token::Ident("endif")
+          | @lexer.Token::Ident("else")
+          | @lexer.Token::Ident("endfor")
+          | @lexer.Token::Ident("endblock") => break
           _ => ()
         }
-        
+
         let _ = self.consume() // Consume {%
         match self.consume() {
           @lexer.Token::Ident("if") => {
@@ -78,7 +86,7 @@ fn Parser::parse_nodes(self : Parser) -> Result[Array[Node], String] {
               Ok(b) => b
               Err(err) => return Err(err)
             }
-            
+
             let mut else_body = []
             match self.peek_next() {
               @lexer.Token::Ident("else") => {
@@ -95,7 +103,7 @@ fn Parser::parse_nodes(self : Parser) -> Result[Array[Node], String] {
               }
               _ => ()
             }
-            
+
             let _ = self.consume() // {%
             match self.consume() {
               @lexer.Token::Ident("endif") => {
@@ -114,7 +122,10 @@ fn Parser::parse_nodes(self : Parser) -> Result[Array[Node], String] {
               _ => return Err("Expected identifier in for loop")
             }
             match self.consume() {
-              @lexer.Token::Ident(in_kw) => if in_kw != "in" { return Err("Expected 'in' in for loop") }
+              @lexer.Token::Ident(in_kw) =>
+                if in_kw != "in" {
+                  return Err("Expected 'in' in for loop")
+                }
               _ => return Err("Expected 'in' in for loop")
             }
             let list_expr = match self.parse_expr() {
@@ -129,7 +140,7 @@ fn Parser::parse_nodes(self : Parser) -> Result[Array[Node], String] {
               Ok(b) => b
               Err(err) => return Err(err)
             }
-            
+
             let _ = self.consume() // {%
             match self.consume() {
               @lexer.Token::Ident("endfor") => {
@@ -155,7 +166,7 @@ fn Parser::parse_nodes(self : Parser) -> Result[Array[Node], String] {
               Ok(b) => b
               Err(err) => return Err(err)
             }
-            
+
             let _ = self.consume() // {%
             match self.consume() {
               @lexer.Token::Ident("endblock") => {
@@ -188,7 +199,11 @@ fn Parser::parse_nodes(self : Parser) -> Result[Array[Node], String] {
   Ok(nodes)
 }
 
-fn Parser::expect(self : Parser, expected : @lexer.Token) -> Result[Unit, String] {
+///|
+fn Parser::expect(
+  self : Parser,
+  expected : @lexer.Token,
+) -> Result[Unit, String] {
   let tok = self.consume()
   if tok == expected {
     Ok(())
@@ -198,10 +213,13 @@ fn Parser::expect(self : Parser, expected : @lexer.Token) -> Result[Unit, String
 }
 
 // Simple expression parser. E.g. `ident`, `"string"`, `123`, `ident | filter`, `a == b`
+
+///|
 fn Parser::parse_expr(self : Parser) -> Result[Expr, String] {
   self.parse_or()
 }
 
+///|
 fn Parser::parse_or(self : Parser) -> Result[Expr, String] {
   let mut left = match self.parse_and() {
     Ok(e) => e
@@ -223,6 +241,7 @@ fn Parser::parse_or(self : Parser) -> Result[Expr, String] {
   Ok(left)
 }
 
+///|
 fn Parser::parse_and(self : Parser) -> Result[Expr, String] {
   let mut left = match self.parse_not() {
     Ok(e) => e
@@ -244,6 +263,7 @@ fn Parser::parse_and(self : Parser) -> Result[Expr, String] {
   Ok(left)
 }
 
+///|
 fn Parser::parse_not(self : Parser) -> Result[Expr, String] {
   match self.peek() {
     @lexer.Token::Ident("not") => {
@@ -258,6 +278,7 @@ fn Parser::parse_not(self : Parser) -> Result[Expr, String] {
   }
 }
 
+///|
 fn Parser::parse_comparison(self : Parser) -> Result[Expr, String] {
   let mut left = match self.parse_additive() {
     Ok(e) => e
@@ -265,7 +286,12 @@ fn Parser::parse_comparison(self : Parser) -> Result[Expr, String] {
   }
   while true {
     match self.peek() {
-      @lexer.Token::Eq | @lexer.Token::Neq | @lexer.Token::Lt | @lexer.Token::Lte | @lexer.Token::Gt | @lexer.Token::Gte => {
+      @lexer.Token::Eq
+      | @lexer.Token::Neq
+      | @lexer.Token::Lt
+      | @lexer.Token::Lte
+      | @lexer.Token::Gt
+      | @lexer.Token::Gte => {
         let op = match self.consume() {
           @lexer.Token::Eq => "=="
           @lexer.Token::Neq => "!="
@@ -287,6 +313,7 @@ fn Parser::parse_comparison(self : Parser) -> Result[Expr, String] {
   Ok(left)
 }
 
+///|
 fn Parser::parse_additive(self : Parser) -> Result[Expr, String] {
   let mut left = match self.parse_multiplicative() {
     Ok(e) => e
@@ -312,6 +339,7 @@ fn Parser::parse_additive(self : Parser) -> Result[Expr, String] {
   Ok(left)
 }
 
+///|
 fn Parser::parse_multiplicative(self : Parser) -> Result[Expr, String] {
   let mut left = match self.parse_unary() {
     Ok(e) => e
@@ -338,6 +366,7 @@ fn Parser::parse_multiplicative(self : Parser) -> Result[Expr, String] {
   Ok(left)
 }
 
+///|
 fn Parser::parse_unary(self : Parser) -> Result[Expr, String] {
   match self.peek() {
     @lexer.Token::Minus => {
@@ -356,6 +385,7 @@ fn Parser::parse_unary(self : Parser) -> Result[Expr, String] {
   }
 }
 
+///|
 fn Parser::parse_member(self : Parser) -> Result[Expr, String] {
   let mut expr = match self.parse_primary() {
     Ok(e) => e
@@ -366,9 +396,7 @@ fn Parser::parse_member(self : Parser) -> Result[Expr, String] {
       @lexer.Token::Dot => {
         let _ = self.consume()
         match self.consume() {
-          @lexer.Token::Ident(field) => {
-            expr = Expr::EGet(expr, field)
-          }
+          @lexer.Token::Ident(field) => expr = Expr::EGet(expr, field)
           _ => return Err("Expected identifier after '.'")
         }
       }
@@ -378,6 +406,7 @@ fn Parser::parse_member(self : Parser) -> Result[Expr, String] {
   Ok(expr)
 }
 
+///|
 fn Parser::parse_filtered(self : Parser) -> Result[Expr, String] {
   let mut left = match self.parse_member() {
     Ok(e) => e
@@ -423,6 +452,7 @@ fn Parser::parse_filtered(self : Parser) -> Result[Expr, String] {
   Ok(left)
 }
 
+///|
 fn Parser::parse_primary(self : Parser) -> Result[Expr, String] {
   match self.consume() {
     @lexer.Token::Ident("true") => Ok(Expr::EBool(true))

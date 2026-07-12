@@ -1,0 +1,11 @@
+import {
+  "Zjyyer/moontera/src/lexer",
+  "Zjyyer/moontera/src/parser",
+  "Zjyyer/moontera/src/context",
+  "Zjyyer/moontera/src/evaluator",
+  "Zjyyer/moontera/src/value",
+}
+
+options(
+  is_main: false,
+)

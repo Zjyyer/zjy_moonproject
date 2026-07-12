@@ -1,24 +1,29 @@
+///|
 enum LexMode {
   Text
   InVariable
   InBlock
 } derive(Eq)
 
+///|
 pub struct Lexer {
   input : String
   mut pos : Int
   mut mode : LexMode
 }
 
+///|
 pub fn Lexer::new(input : String) -> Lexer {
   { input, pos: 0, mode: Text }
 }
 
+///|
 fn Lexer::char_at(self : Lexer, index : Int) -> Char {
   Int::unsafe_to_char(self.input[index].to_int())
 }
 
-fn Lexer::peek(self : Lexer) -> Option[Char] {
+///|
+fn Lexer::peek(self : Lexer) -> Char? {
   if self.pos < self.input.length() {
     Some(self.char_at(self.pos))
   } else {
@@ -26,7 +31,8 @@ fn Lexer::peek(self : Lexer) -> Option[Char] {
   }
 }
 
-fn Lexer::peek_next(self : Lexer) -> Option[Char] {
+///|
+fn Lexer::peek_next(self : Lexer) -> Char? {
   if self.pos + 1 < self.input.length() {
     Some(self.char_at(self.pos + 1))
   } else {
@@ -34,7 +40,8 @@ fn Lexer::peek_next(self : Lexer) -> Option[Char] {
   }
 }
 
-fn Lexer::consume(self : Lexer) -> Option[Char] {
+///|
+fn Lexer::consume(self : Lexer) -> Char? {
   if self.pos < self.input.length() {
     let c = self.char_at(self.pos)
     self.pos += 1
@@ -44,6 +51,7 @@ fn Lexer::consume(self : Lexer) -> Option[Char] {
   }
 }
 
+///|
 fn Lexer::skip_whitespace(self : Lexer) -> Unit {
   while true {
     match self.peek() {
@@ -55,18 +63,22 @@ fn Lexer::skip_whitespace(self : Lexer) -> Unit {
   }
 }
 
+///|
 fn is_ident_start(c : Char) -> Bool {
   (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'
 }
 
+///|
 fn is_ident_char(c : Char) -> Bool {
   is_ident_start(c) || (c >= '0' && c <= '9')
 }
 
+///|
 fn is_digit(c : Char) -> Bool {
   c >= '0' && c <= '9'
 }
 
+///|
 fn parse_double(s : String) -> Double {
   let mut val = 0.0
   let mut decimal_divider = 1.0
@@ -90,7 +102,7 @@ fn parse_double(s : String) -> Double {
     if digit >= 0 && digit <= 9 {
       if in_decimal {
         decimal_divider = decimal_divider * 10.0
-        val = val + (digit.to_double() / decimal_divider)
+        val = val + digit.to_double() / decimal_divider
       } else {
         val = val * 10.0 + digit.to_double()
       }
@@ -100,6 +112,7 @@ fn parse_double(s : String) -> Double {
   val * sign
 }
 
+///|
 /// Tokenize the entire input into an array of tokens.
 pub fn Lexer::tokenize(self : Lexer) -> Result[Array[Token], String] {
   let tokens = []
@@ -116,6 +129,7 @@ pub fn Lexer::tokenize(self : Lexer) -> Result[Array[Token], String] {
   Ok(tokens)
 }
 
+///|
 /// Get the next token.
 pub fn Lexer::next_token(self : Lexer) -> Result[Token, String] {
   if self.pos >= self.input.length() {
@@ -157,7 +171,8 @@ pub fn Lexer::next_token(self : Lexer) -> Result[Token, String] {
               self.pos += 2
               // Skip comment
               while self.pos < self.input.length() {
-                if self.char_at(self.pos) == '#' && self.peek_next() == Some('}') {
+                if self.char_at(self.pos) == '#' &&
+                  self.peek_next() == Some('}') {
                   self.pos += 2
                   break
                 }
@@ -182,9 +197,9 @@ pub fn Lexer::next_token(self : Lexer) -> Result[Token, String] {
       if self.pos >= self.input.length() {
         return Err("Unexpected EOF inside tag")
       }
-      
+
       let c = self.char_at(self.pos)
-      
+
       // Check for closing tags
       if self.mode == InVariable && c == '}' && self.peek_next() == Some('}') {
         self.pos += 2
@@ -196,20 +211,50 @@ pub fn Lexer::next_token(self : Lexer) -> Result[Token, String] {
         self.mode = Text
         return Ok(Token::BlockEnd)
       }
-      
+
       // Single character tokens
       match c {
-        '|' => { self.pos += 1; return Ok(Token::Pipe) }
-        '.' => { self.pos += 1; return Ok(Token::Dot) }
-        ',' => { self.pos += 1; return Ok(Token::Comma) }
-        '+' => { self.pos += 1; return Ok(Token::Plus) }
-        '-' => { self.pos += 1; return Ok(Token::Minus) }
-        '*' => { self.pos += 1; return Ok(Token::Mul) }
-        '/' => { self.pos += 1; return Ok(Token::Div) }
-        '%' => { self.pos += 1; return Ok(Token::Mod) }
-        '(' => { self.pos += 1; return Ok(Token::LParen) }
-        ')' => { self.pos += 1; return Ok(Token::RParen) }
-        '=' => {
+        '|' => {
+          self.pos += 1
+          return Ok(Token::Pipe)
+        }
+        '.' => {
+          self.pos += 1
+          return Ok(Token::Dot)
+        }
+        ',' => {
+          self.pos += 1
+          return Ok(Token::Comma)
+        }
+        '+' => {
+          self.pos += 1
+          return Ok(Token::Plus)
+        }
+        '-' => {
+          self.pos += 1
+          return Ok(Token::Minus)
+        }
+        '*' => {
+          self.pos += 1
+          return Ok(Token::Mul)
+        }
+        '/' => {
+          self.pos += 1
+          return Ok(Token::Div)
+        }
+        '%' => {
+          self.pos += 1
+          return Ok(Token::Mod)
+        }
+        '(' => {
+          self.pos += 1
+          return Ok(Token::LParen)
+        }
+        ')' => {
+          self.pos += 1
+          return Ok(Token::RParen)
+        }
+        '=' =>
           if self.peek_next() == Some('=') {
             self.pos += 2
             return Ok(Token::Eq)
@@ -217,16 +262,14 @@ pub fn Lexer::next_token(self : Lexer) -> Result[Token, String] {
             self.pos += 1
             return Ok(Token::Assign)
           }
-        }
-        '!' => {
+        '!' =>
           if self.peek_next() == Some('=') {
             self.pos += 2
             return Ok(Token::Neq)
           } else {
             return Err("Unexpected character '!' without '='")
           }
-        }
-        '>' => {
+        '>' =>
           if self.peek_next() == Some('=') {
             self.pos += 2
             return Ok(Token::Gte)
@@ -234,8 +277,7 @@ pub fn Lexer::next_token(self : Lexer) -> Result[Token, String] {
             self.pos += 1
             return Ok(Token::Gt)
           }
-        }
-        '<' => {
+        '<' =>
           if self.peek_next() == Some('=') {
             self.pos += 2
             return Ok(Token::Lte)
@@ -243,7 +285,6 @@ pub fn Lexer::next_token(self : Lexer) -> Result[Token, String] {
             self.pos += 1
             return Ok(Token::Lt)
           }
-        }
         '"' => {
           self.pos += 1
           let start = self.pos
@@ -268,7 +309,8 @@ pub fn Lexer::next_token(self : Lexer) -> Result[Token, String] {
         }
         if self.pos < self.input.length() && self.char_at(self.pos) == '.' {
           self.pos += 1
-          while self.pos < self.input.length() && is_digit(self.char_at(self.pos)) {
+          while self.pos < self.input.length() &&
+                is_digit(self.char_at(self.pos)) {
             self.pos += 1
           }
         }
@@ -280,7 +322,8 @@ pub fn Lexer::next_token(self : Lexer) -> Result[Token, String] {
       // Identifiers
       if is_ident_start(c) {
         let start = self.pos
-        while self.pos < self.input.length() && is_ident_char(self.char_at(self.pos)) {
+        while self.pos < self.input.length() &&
+              is_ident_char(self.char_at(self.pos)) {
           self.pos += 1
         }
         let text = self.input[start:self.pos]

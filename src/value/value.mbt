@@ -1,3 +1,4 @@
+///|
 /// `Value` represents the dynamic data types supported in the template.
 pub(all) enum Value {
   VNull
@@ -8,10 +9,12 @@ pub(all) enum Value {
   VObject(Map[String, Value])
 } derive(Eq, Debug)
 
-pub impl Show for Value with output(self, logger) {
+///|
+pub impl Show for Value with fn output(self, logger) {
   self.output(logger)
 }
 
+///|
 /// Check if a `Value` is considered truthy.
 ///
 /// In MoonTera:

@@ -8,18 +8,38 @@ on:
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest
+    name: Build & Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout Code
+      uses: actions/checkout@v4
 
-    - name: Install MoonBit Toolchain
-      run: |
-        curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
-        echo "$HOME/.moon/bin" >> $GITHUB_PATH
+    - name: Setup MoonBit Toolchain
+      uses: chawyehsu/setup-moonup@v1
+      with:
+        moonbit-version: '0.10.3'
 
     - name: Verify Version
-      run: moon version
+      run: moon version --all
 
-    - name: Run Tests
+    - name: Install Dependencies
+      run: |
+        moon update
+        moon install
+
+    - name: Process 1 - moon check
+      run: moon check
+
+    - name: Process 2 - moon fmt --deny-warn
+      run: moon fmt --deny-warn
+
+    - name: Process 3 - moon info --deny-warn
+      run: moon info --deny-warn
+
+    - name: Process 4 - moon test (moontest)
       run: moon test

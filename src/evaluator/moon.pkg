@@ -1,0 +1,10 @@
+import {
+  "Zjyyer/moontera/src/parser",
+  "Zjyyer/moontera/src/context",
+  "Zjyyer/moontera/src/value",
+  "Zjyyer/moontera/src/filters",
+}
+
+options(
+  is_main: false,
+)

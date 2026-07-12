@@ -1,3 +1,4 @@
+///|
 fn format_val(v : @value.Value) -> String {
   match v {
     @value.Value::VNull => ""
@@ -9,6 +10,7 @@ fn format_val(v : @value.Value) -> String {
   }
 }
 
+///|
 fn string_contains(s : String, sub : String) -> Bool {
   if sub.length() == 0 {
     return true
@@ -36,24 +38,38 @@ fn string_contains(s : String, sub : String) -> Bool {
   false
 }
 
+///|
 fn safe_string_slice(s : String, start : Int, end : Int) -> String {
   let len = s.length()
   let mut r_start = if start < 0 { len + start } else { start }
   let mut r_end = if end < 0 { len + end } else { end }
-  if r_start < 0 { r_start = 0 }
-  if r_end > len { r_end = len }
+  if r_start < 0 {
+    r_start = 0
+  }
+  if r_end > len {
+    r_end = len
+  }
   if r_start >= r_end || r_start >= len {
     return ""
   }
   s[r_start:r_end].to_owned()
 }
 
-fn safe_array_slice(arr : Array[@value.Value], start : Int, end : Int) -> Array[@value.Value] {
+///|
+fn safe_array_slice(
+  arr : Array[@value.Value],
+  start : Int,
+  end : Int,
+) -> Array[@value.Value] {
   let len = arr.length()
   let mut r_start = if start < 0 { len + start } else { start }
   let mut r_end = if end < 0 { len + end } else { end }
-  if r_start < 0 { r_start = 0 }
-  if r_end > len { r_end = len }
+  if r_start < 0 {
+    r_start = 0
+  }
+  if r_end > len {
+    r_end = len
+  }
   if r_start >= r_end || r_start >= len {
     return []
   }
@@ -66,6 +82,7 @@ fn safe_array_slice(arr : Array[@value.Value], start : Int, end : Int) -> Array[
   res
 }
 
+///|
 fn string_replace(s : String, from_str : String, to_str : String) -> String {
   if from_str.length() == 0 {
     return s
@@ -99,19 +116,23 @@ fn string_replace(s : String, from_str : String, to_str : String) -> String {
   res
 }
 
+///|
 fn string_truncate(s : String, max_len : Int) -> String {
   if s.length() <= max_len {
     s
+  } else if max_len <= 0 {
+    "..."
   } else {
-    if max_len <= 0 {
-      "..."
-    } else {
-      s[0:max_len].to_owned() + "..."
-    }
+    s[0:max_len].to_owned() + "..."
   }
 }
 
-pub fn apply_filter(name : String, val : @value.Value, args : Array[@value.Value]) -> Result[@value.Value, String] {
+///|
+pub fn apply_filter(
+  name : String,
+  val : @value.Value,
+  args : Array[@value.Value],
+) -> Result[@value.Value, String] {
   if name == "upper" {
     match val {
       @value.Value::VString(s) => {
@@ -156,8 +177,10 @@ pub fn apply_filter(name : String, val : @value.Value, args : Array[@value.Value
     }
   } else if name == "length" {
     match val {
-      @value.Value::VString(s) => Ok(@value.Value::VNumber(s.length().to_double()))
-      @value.Value::VArray(arr) => Ok(@value.Value::VNumber(arr.length().to_double()))
+      @value.Value::VString(s) =>
+        Ok(@value.Value::VNumber(s.length().to_double()))
+      @value.Value::VArray(arr) =>
+        Ok(@value.Value::VNumber(arr.length().to_double()))
       _ => Err("Filter 'length' expects a string or array")
     }
   } else if name == "default" {
@@ -199,12 +222,12 @@ pub fn apply_filter(name : String, val : @value.Value, args : Array[@value.Value
     }
     let target = args[0]
     match val {
-      @value.Value::VString(s) => {
+      @value.Value::VString(s) =>
         match target {
-          @value.Value::VString(sub) => Ok(@value.Value::VBool(string_contains(s, sub)))
+          @value.Value::VString(sub) =>
+            Ok(@value.Value::VBool(string_contains(s, sub)))
           _ => Err("Filter 'contains' on string expects a string argument")
         }
-      }
       @value.Value::VArray(arr) => {
         let mut found = false
         let len = arr.length()
@@ -241,8 +264,10 @@ pub fn apply_filter(name : String, val : @value.Value, args : Array[@value.Value
       }
     }
     match val {
-      @value.Value::VString(s) => Ok(@value.Value::VString(safe_string_slice(s, start, end)))
-      @value.Value::VArray(arr) => Ok(@value.Value::VArray(safe_array_slice(arr, start, end)))
+      @value.Value::VString(s) =>
+        Ok(@value.Value::VString(safe_string_slice(s, start, end)))
+      @value.Value::VArray(arr) =>
+        Ok(@value.Value::VArray(safe_array_slice(arr, start, end)))
       _ => Err("Filter 'slice' expects a string or array")
     }
   } else if name == "replace" {
@@ -258,7 +283,8 @@ pub fn apply_filter(name : String, val : @value.Value, args : Array[@value.Value
       _ => return Err("Filter 'replace' to argument expects a string")
     }
     match val {
-      @value.Value::VString(s) => Ok(@value.Value::VString(string_replace(s, from_str, to_str)))
+      @value.Value::VString(s) =>
+        Ok(@value.Value::VString(string_replace(s, from_str, to_str)))
       _ => Err("Filter 'replace' expects a string")
     }
   } else if name == "truncate" {
@@ -270,7 +296,8 @@ pub fn apply_filter(name : String, val : @value.Value, args : Array[@value.Value
       _ => return Err("Filter 'truncate' length argument expects a number")
     }
     match val {
-      @value.Value::VString(s) => Ok(@value.Value::VString(string_truncate(s, max_len)))
+      @value.Value::VString(s) =>
+        Ok(@value.Value::VString(string_truncate(s, max_len)))
       _ => Err("Filter 'truncate' expects a string")
     }
   } else if name == "abs" {
@@ -284,7 +311,11 @@ pub fn apply_filter(name : String, val : @value.Value, args : Array[@value.Value
   } else if name == "round" {
     match val {
       @value.Value::VNumber(n) => {
-        let r = if n < 0.0 { (n - 0.5).to_int().to_double() } else { (n + 0.5).to_int().to_double() }
+        let r = if n < 0.0 {
+          (n - 0.5).to_int().to_double()
+        } else {
+          (n + 0.5).to_int().to_double()
+        }
         Ok(@value.Value::VNumber(r))
       }
       _ => Err("Filter 'round' expects a number")

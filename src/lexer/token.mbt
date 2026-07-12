@@ -1,3 +1,4 @@
+///|
 /// Token represents the lexical tokens in a template.
 pub(all) enum Token {
   Text(String)
@@ -28,6 +29,7 @@ pub(all) enum Token {
   Eof
 } derive(Eq, Debug)
 
-pub impl Show for Token with output(self, logger) {
+///|
+pub impl Show for Token with fn output(self, logger) {
   self.output(logger)
 }
